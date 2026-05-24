@@ -1,0 +1,130 @@
+@import "mocha.css"; 
+
+* {
+    font-family: "MartianMono Nerd Font Propo";
+    font-size: 10px;
+    min-height: 0;
+    font-weight: bold;
+}
+
+window#waybar {
+    background: transparent;
+    color: @subtext0;
+}
+
+#window {
+    margin: 8px;
+    padding-left: 8;
+    padding-right: 8;
+}
+
+.modules-left {
+    background: rgba(0,0,0, .6);
+    border-radius: 8px;
+    padding: 4px;
+    margin: 0 2px 2px 2px;
+}
+.modules-center {
+    background: rgba(0,0,0, .4);
+    border-radius: 8px;
+    padding: 2px;
+    margin: 0 2px 2px 2px;
+}
+.modules-right {
+    background: rgba(0,0,0, .6);
+    border-radius: 8px;
+    padding: 4px;
+    margin: 0 2px 2px 2px;
+}
+
+#workspaces button {
+    color: @subtext0;
+    padding: 2px;
+    border-radius: 8px;
+}
+
+#workspaces button.empty {
+    color: rgba(0,0,0,.4);
+}
+
+#workspaces button:hover {
+    background: rgba(0, 0, 0, 0.3);
+    border: rgba(0, 0, 0, 0.3);
+    box-shadow: inherit;
+    text-shadow: inherit;
+    padding: 2px;
+    outline: none;
+    color: @subtext0;
+}
+
+#workspaces button.visible {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+#workspaces button.active {
+    background: rgba(0, 0, 0, 0.5);
+    color: @green;
+}
+
+#pulseaudio,
+#clock,
+#battery,
+#cpu,
+#memory,
+#disk,
+#temperature,
+#backlight,
+#wireplumber,
+#tray,
+#network,
+#mode,
+#scratchpad {
+  margin-top: 2px;
+  margin-bottom: 2px;
+  margin-left: 4px;
+  margin-right: 4px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#clock {
+}
+
+#clock.date {
+}
+
+#pulseaudio {
+}
+
+#network {
+}
+
+#idle_inhibitor {
+    margin-right: 12px;
+    color: #7cb342;
+}
+
+#idle_inhibitor.activated {
+    color: @red;
+}
+
+#battery {
+}
+
+/* If workspaces is the leftmost module, omit left margin */
+.modules-left>widget:first-child>#workspaces {
+    margin-left: 0;
+}
+
+/* If workspaces is the rightmost module, omit right margin */
+.modules-right>widget:last-child>#workspaces {
+    margin-right: 0;
+}
+
+#custom-vpn {
+    color: @lavender;
+    border-radius: 15px;
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
