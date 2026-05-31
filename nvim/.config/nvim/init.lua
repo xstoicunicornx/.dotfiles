@@ -134,7 +134,7 @@ require('lazy').setup({
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = '[q]uickfix list' })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -212,15 +212,15 @@ vim.keymap.set('n', '<leader>b/', function()
   })
 end, { desc = '[b]uffer [/]search' })
 
-vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[s]earch [h]elp' })
-vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[s]earch [k]eymaps' })
-vim.keymap.set('n', '<leader>st', builtin.builtin, { desc = '[s]earch [t]elescope' })
-vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[s]earch [w]ord' })
-vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[s]earch [d]iagnostics' })
-vim.keymap.set('n', '<leader>sr', builtin.oldfiles, { desc = '[s]earch [r]ecent' })
-vim.keymap.set('n', '<leader>sn', function()
+vim.keymap.set('n', '<leader>zh', builtin.help_tags, { desc = '[z]search [h]elp' })
+vim.keymap.set('n', '<leader>zk', builtin.keymaps, { desc = '[z]search [k]eymaps' })
+vim.keymap.set('n', '<leader>zt', builtin.builtin, { desc = '[z]search [t]elescope' })
+vim.keymap.set('n', '<leader>zw', builtin.grep_string, { desc = '[z]search [w]ord' })
+vim.keymap.set('n', '<leader>zd', builtin.diagnostics, { desc = '[z]search [d]iagnostics' })
+vim.keymap.set('n', '<leader>zr', builtin.oldfiles, { desc = '[z]search [r]ecent' })
+vim.keymap.set('n', '<leader>zn', function()
   builtin.find_files { cwd = vim.fn.stdpath 'config' }
-end, { desc = '[s]earch [n]eovim' })
+end, { desc = '[x]search [n]eovim' })
 
 -- shortcut menu
 vim.keymap.set('n', '<leader>e', '<leader>fe', { desc = '[e]xplorer', remap = true })
@@ -229,20 +229,14 @@ vim.keymap.set('n', '<leader>/', '<leader>b/', { desc = '[/]search' })
 
 -- [[format]]
 local conform = require 'conform'
-vim.keymap.set('n', '<leader>br', conform.format, { desc = '[b]uffer fo[r]mat' })
-
--- category keymaps
-vim.keymap.set('n', '<leader>g', function() end, { desc = '[g]oto' })
-vim.keymap.set('n', '<leader>b', function() end, { desc = '[b]uffer' })
-vim.keymap.set('n', '<leader>f', function() end, { desc = '[f]ile' })
+vim.keymap.set('n', '<leader>cf', conform.format, { desc = '[c]ode [f]ormat' })
 
 -- diff view keymaps
--- vim.keymap.del('n', '<Space>d')
-vim.keymap.set('n', '<leader>d', function() end, { desc = '[d]iffview' })
 vim.keymap.set('n', '<leader>do', ':DiffviewOpen<cr>', { desc = '[d]iffview [o]pen' })
 vim.keymap.set('n', '<leader>dl', ':DiffviewFileHistory<cr>', { desc = '[d]iffview [l]og' })
 vim.keymap.set('n', '<leader>dc', ':DiffviewClose<cr>', { desc = '[d]iffview [c]lose' })
-vim.keymap.set('n', '<leader>dt', ':DiffviewToggleFiles<cr>', { desc = '[d]iffview [t]oggle files' })
+vim.keymap.set('n', '<leader>dm', '<cmd>DiffviewOpen master...<CR>', { desc = '[d]iffview [m]aster' })
+-- vim.keymap.set('n', '<leader>dt', ':DiffviewToggleFiles<cr>', { desc = '[d]iffview [t]oggle files' })
 vim.keymap.set('n', '<leacer>dr', ':DiffviewRefresh<cr>', { desc = '[d]iffview [r]efresh' })
 
 -- [[ Autocommands ]]
@@ -273,16 +267,17 @@ vim.api.nvim_create_autocmd('LspAttach', {
     -- for LSP related items. It sets the mode, buffer and description for us each time.
     local map = function(keys, func, desc, mode)
       mode = mode or 'n'
-      vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
+      local desc_prefix = desc == "[r]ename" and "[c]ode " or "[l]sp "
+      vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = desc_prefix .. desc })
     end
 
     -- Jump to the definition of the word under your cursor.
     --  This is where a variable was first declared, or where a function is defined, etc.
     --  To jump back, press <C-t>.
-    map('<leader>gd', require('telescope.builtin').lsp_definitions, '[g]oto [d]efinition')
+    map('gld', require('telescope.builtin').lsp_definitions, '[d]efinition')
 
     -- Find references for the word under your cursor.
-    map('<leader>gr', require('telescope.builtin').lsp_references, '[g]oto [r]eferences')
+    map('glr', require('telescope.builtin').lsp_references, '[r]eferences')
 
     -- Jump to the implementation of the word under your cursor.
     --  Useful when your language has ways of declaring types without an actual implementation.
@@ -291,7 +286,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
     -- Jump to the type of the word under your cursor.
     --  Useful when you're not sure what type a variable is and you want to see
     --  the definition of its *type*, not where it was *defined*.
-    map('<leader>gt', require('telescope.builtin').lsp_type_definitions, '[g]oto [t]ype')
+    map('glt', require('telescope.builtin').lsp_type_definitions, '[t]ype')
 
     -- Fuzzy find all the symbols in your current document.
     --  Symbols are things like variables, functions, types, etc.
@@ -303,7 +298,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
 
     -- Rename the variable under your cursor.
     --  Most Language Servers support renaming across files, etc.
-    map('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
+    map('<leader>cr', vim.lsp.buf.rename, '[r]ename')
 
     -- Execute a code action, usually your cursor needs to be on top of an error
     -- or a suggestion from your LSP for this to activate.
@@ -311,7 +306,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
 
     -- WARN: This is not Goto Definition, this is Goto Declaration.
     --  For example, in C this would take you to the header.
-    map('<leader>gD', vim.lsp.buf.declaration, '[g]oto [D]eclaration')
+    map('glD', vim.lsp.buf.declaration, '[D]eclaration')
 
     -- The following two autocommands are used to highlight references of the
     -- word under your cursor when your cursor rests there for a little while.
@@ -343,5 +338,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
     end
   end,
 })
+
+pcall(vim.keymap.del, 'n', '<leader>p')
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et

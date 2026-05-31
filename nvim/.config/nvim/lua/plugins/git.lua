@@ -1,17 +1,20 @@
--- Adds git related signs to the gutter, as well as utilities for managing changes
+-- Adds related signs to the gutter, as well as utilities for managing changes
 
 return {
   {
     -- See `:help gitsigns` to understand what the configuration keys do
     'lewis6991/gitsigns.nvim',
     opts = {
-      -- Adds git related signs to the gutter, as well as utilities for managing changes
+      -- Adds related signs to the gutter, as well as utilities for managing changes
       signs = {
         -- add = { text = '+' },
         -- change = { text = '~' },
         delete = { text = '_' },
         topdelete = { text = '‾' },
         -- changedelete = { text = '~' },
+      },
+      diff_opts = {
+        algorithm = "histogram",
       },
       on_attach = function(bufnr)
         local gitsigns = require 'gitsigns'
@@ -29,7 +32,7 @@ return {
           else
             gitsigns.nav_hunk 'next'
           end
-        end, { desc = 'Jump to next git [c]hange' })
+        end, { desc = 'Jump to next [c]hange' })
 
         map('n', '[c', function()
           if vim.wo.diff then
@@ -37,47 +40,64 @@ return {
           else
             gitsigns.nav_hunk 'prev'
           end
-        end, { desc = 'Jump to previous git [c]hange' })
+        end, { desc = 'Jump to previous [c]hange' })
 
         -- Actions
         -- visual mode
-        map('v', '<leader>hs', function()
+        map('v', '<leader>gs', function()
           gitsigns.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
-        end, { desc = 'git [s]tage hunk' })
-        map('v', '<leader>hr', function()
+        end, { desc = '[s]tage hunk' })
+        map('v', '<leader>gr', function()
           gitsigns.reset_hunk { vim.fn.line '.', vim.fn.line 'v' }
-        end, { desc = 'git [r]eset hunk' })
+        end, { desc = '[r]eset hunk' })
         -- normal mode
-        map('n', '<leader>hs', gitsigns.stage_hunk, { desc = 'git [s]tage hunk' })
-        map('n', '<leader>hr', gitsigns.reset_hunk, { desc = 'git [r]eset hunk' })
-        map('n', '<leader>hS', gitsigns.stage_buffer, { desc = 'git [S]tage buffer' })
-        -- map('n', '<leader>hu', gitsigns.undo_stage_hunk, { desc = 'git [u]ndo stage hunk' })
-        map('n', '<leader>hR', gitsigns.reset_buffer, { desc = 'git [R]eset buffer' })
-        map('n', '<leader>hp', gitsigns.preview_hunk, { desc = 'git [p]review hunk' })
-        map('n', '<leader>hb', gitsigns.blame_line, { desc = 'git [b]lame line' })
-        map('n', '<leader>hd', gitsigns.diffthis, { desc = 'git [d]iff against index' })
-        map('n', '<leader>hD', function()
+        map('n', '<leader>gs', gitsigns.stage_hunk, { desc = '[s]tage hunk' })
+        map('n', '<leader>gr', gitsigns.reset_hunk, { desc = '[r]eset hunk' })
+        map('n', '<leader>gS', gitsigns.stage_buffer, { desc = '[S]tage buffer' })
+        -- map('n', '<leader>hu', gitsigns.undo_stage_hunk, { desc = '[u]ndo stage hunk' })
+        map('n', '<leader>gR', gitsigns.reset_buffer, { desc = '[R]eset buffer' })
+        map('n', '<leader>gp', gitsigns.preview_hunk, { desc = '[p]review hunk' })
+        -- map('n', '<leader>gb', gitsigns.blame_line, { desc = '[b]lame line' })
+        map('n', '<leader>gd', gitsigns.diffthis, { desc = '[d]iff against index' })
+        map('n', '<leader>gD', function()
           gitsigns.diffthis '@'
-        end, { desc = 'git [D]iff against last commit' })
+        end, { desc = '[D]iff against last commit' })
         -- Toggles
-        map('n', '<leader>tb', gitsigns.toggle_current_line_blame, { desc = '[T]oggle git show [b]lame line' })
-        -- map('n', '<leader>tD', gitsigns.toggle_deleted, { desc = '[T]oggle git show [D]eleted' })
+        map('n', '<leader>gb', gitsigns.toggle_current_line_blame, { desc = '[b]lame line toggle' })
+        -- map('n', '<leader>tD', gitsigns.toggle_deleted, { desc = '[T]oggle show [D]eleted' })
       end,
     },
+  },
+  {
+    'rickhowe/diffchar.vim',
+    config = function()
+      --   -- Use bold/underline on adjacent chars instead of virtual blank columns.
+      --   vim.g.DiffDelPosVisible = 1
+      --
+      --   -- Disable diffchar default keymaps.
+      --   -- See: https://github.com/rickhowe/diffchar.vim/issues/21
+      vim.cmd([[
+      nmap <leader>g <Nop>
+      nmap <leader>p <Nop>
+    ]])
+    end,
   },
   {
     -- "sindrets/diffview.nvim",
     "dlyongemallo/diffview.nvim",
     config = function()
+      local actions = require("diffview.actions")
       require("diffview").setup({
-        enhanced_diff_hl = true,
-        diffopt = { algorithm = "myers" }, -- vim.opt.diffopt others "histogram" | "patience" | "minimal"
+        -- enhanced_diff_hl = true,
+        diffopt = { algorithm = "myers", "linematch:60" }, -- vim.opt.diffopt others "histogram" | "patience" | "minimal"
         view = {
           default = { layout = "diff1_inline" },
           inline = {
             deletion_highlight = "full_width",
-            -- style = "overleaf",
+            style = "unified",
           },
+          file_history_view = { layout = "diff1_inline" },
+          file_history = { layout = "diff1_inline" },
           cycle_layouts = {
             default = { "diff1_inline", "diff2_horizontal", },
           },
@@ -86,22 +106,22 @@ return {
             disable_diagnostics = true,
             winbar_info = true,
           },
+        },
+        keymaps = {
+          view = {
+            { "n", "<leader>e", require("diffview.actions").toggle_files, { desc = "[e]xplorer" } },
+            { "n", "<leader>b", false,                                    { desc = "" } },
+          },
+          file_panel = {
+            { "n", "<leader>e", require("diffview.actions").toggle_files, { desc = "[e]xplorer" } },
+            { "n", "<leader>b", false,                                    { desc = "" } },
+          },
+          file_history_panel = {
+            { "n", "<leader>e", require("diffview.actions").toggle_files, { desc = "[e]xplorer" } },
+            { "n", "<leader>b", false,                                    { desc = "" } },
+          },
         }
       })
     end,
-  },
-  -- {
-  --   'rickhowe/diffchar.vim',
-  --   config = function()
-  --     -- Use bold/underline on adjacent chars instead of virtual blank columns.
-  --     vim.g.DiffDelPosVisible = 1
-  --
-  --     -- Disable diffchar default keymaps.
-  --     -- See: https://github.com/rickhowe/diffchar.vim/issues/21
-  --     vim.cmd([[
-  --     nmap <leader>g <Nop>
-  --     nmap <leader>p <Nop>
-  --   ]])
-  --   end,
-  -- }
+  }
 }
