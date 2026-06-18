@@ -39,103 +39,11 @@
 --   steel_grey = '#4c566a',
 --   grey = '#3b4252',
 -- }
-local colors = require("tokyonight.colors").setup({ style = 'moon' })
-colors.white = '#D4D4D4' ---@diagnostic disable-line: inject-field
-colors.steel_grey = '#4c566a' ---@diagnostic disable-line: inject-field
-colors.grey = '#3b4252' ---@diagnostic disable-line: inject-field
-
--- define custom theme
-local theme = {
-  normal = {
-    b = { fg = colors.white, bg = colors.steel_grey },
-    a = { fg = colors.white, bg = colors.bg_highlight },
-    c = { fg = colors.white, guibg = 'none' },
-  },
-  visual = {
-    b = { fg = colors.magenta, bg = colors.steel_grey },
-    a = { fg = colors.bg, bg = colors.magenta, gui = 'bold' },
-    c = { fg = colors.bg, bg = colors.magenta },
-  },
-  inactive = {
-    b = { fg = colors.white, bg = colors.steel_grey },
-    a = { fg = colors.white, bg = colors.steel_grey },
-  },
-  replace = {
-    b = { fg = colors.yellow, bg = colors.steel_grey },
-    a = { fg = colors.bg, bg = colors.yellow, gui = 'bold' },
-    c = { fg = colors.bg, bg = colors.yellow },
-  },
-  insert = {
-    b = { fg = colors.orange, bg = colors.steel_grey },
-    a = { fg = colors.bg, bg = colors.orange, gui = 'bold' },
-    c = { fg = colors.bg, bg = colors.orange },
-  },
-  command = {
-    b = { fg = colors.cyan, bg = colors.steel_grey },
-    a = { fg = colors.bg, bg = colors.cyan, gui = 'bold' },
-    c = { fg = colors.bg, bg = colors.cyan },
-  },
-}
-
--- define custom functions
-local function get_total_lines()
-  return vim.fn.line '$'
-end
-
--- define sections
-local tabline = {
-  lualine_a = { 'buffers' },
-  lualine_b = {},
-  lualine_c = {},
-  lualine_x = {},
-  lualine_y = {},
-  lualine_z = { 'tabs' },
-}
-
-local sections = {
-  lualine_a = {
-    {
-      function()
-        return 'RECORDING'
-      end,
-      cond = require('noice').api.status.mode.has,
-      color = { fg = colors.bg, bg = colors.red, gui = 'bold' },
-    },
-    {
-      'mode',
-    },
-  },
-  lualine_b = { 'branch', 'diff', 'diagnostics' },
-  lualine_c = { { 'filename', file_status = true, path = 1 } },
-  lualine_x = { 'encoding', 'fileformat', 'filetype' },
-  lualine_y = { 'progress' },
-  lualine_z = {
-    'location',
-    { get_total_lines, description = 'total lines' },
-    {
-      function()
-        return '●'
-      end,
-      cond = require('noice').api.status.mode.has,
-      color = { fg = colors.bg, bg = colors.red, gui = 'bold' },
-    },
-  },
-}
-
-local inactive_sections = {
-  lualine_a = {},
-  lualine_b = {},
-  lualine_c = { { 'filename', file_status = true, path = 1 } },
-  lualine_x = { 'location', { get_total_lines, description = 'total lines' } },
-  lualine_y = {},
-  lualine_z = {},
-}
-
 return {
   {
     'folke/noice.nvim',
     event = 'VeryLazy',
-    dependencies = { { 'MunifTanjum/nui.nvim', lazy = true } },
+    dependencies = { { 'MunifTanjim/nui.nvim', lazy = true } },
     opts = {
       lsp = {
         override = {
@@ -189,7 +97,108 @@ return {
   {
     'nvim-lualine/lualine.nvim',
     event = 'VeryLazy',
+    -- ensure the colorscheme is present so require("tokyonight.colors") works
+    dependencies = { 'folke/tokyonight.nvim' },
     config = function()
+      -- FIX 3: build colors/theme/sections at runtime (inside config),
+      -- not at spec-evaluation time. This avoids requiring plugins
+      -- before they're installed on a fresh machine.
+      local colors = require('tokyonight.colors').setup({ style = 'moon' })
+      colors.white = '#D4D4D4' ---@diagnostic disable-line: inject-field
+      colors.steel_grey = '#4c566a' ---@diagnostic disable-line: inject-field
+      colors.grey = '#3b4252' ---@diagnostic disable-line: inject-field
+
+      local theme = {
+        normal = {
+          b = { fg = colors.white, bg = colors.steel_grey },
+          a = { fg = colors.white, bg = colors.bg_highlight },
+          c = { fg = colors.white, guibg = 'none' },
+        },
+        visual = {
+          b = { fg = colors.magenta, bg = colors.steel_grey },
+          a = { fg = colors.bg, bg = colors.magenta, gui = 'bold' },
+          c = { fg = colors.bg, bg = colors.magenta },
+        },
+        inactive = {
+          b = { fg = colors.white, bg = colors.steel_grey },
+          a = { fg = colors.white, bg = colors.steel_grey },
+        },
+        replace = {
+          b = { fg = colors.yellow, bg = colors.steel_grey },
+          a = { fg = colors.bg, bg = colors.yellow, gui = 'bold' },
+          c = { fg = colors.bg, bg = colors.yellow },
+        },
+        insert = {
+          b = { fg = colors.orange, bg = colors.steel_grey },
+          a = { fg = colors.bg, bg = colors.orange, gui = 'bold' },
+          c = { fg = colors.bg, bg = colors.orange },
+        },
+        command = {
+          b = { fg = colors.cyan, bg = colors.steel_grey },
+          a = { fg = colors.bg, bg = colors.cyan, gui = 'bold' },
+          c = { fg = colors.bg, bg = colors.cyan },
+        },
+      }
+
+      local function get_total_lines()
+        return vim.fn.line '$'
+      end
+
+      -- FIX 2: defer the noice require so it only runs at runtime.
+      -- pcall makes it fail gracefully if noice isn't available yet.
+      local function noice_recording()
+        local ok, noice = pcall(require, 'noice')
+        return ok and noice.api.status.mode.has()
+      end
+
+      local tabline = {
+        lualine_a = { 'buffers' },
+        lualine_b = {},
+        lualine_c = {},
+        lualine_x = {},
+        lualine_y = {},
+        lualine_z = { 'tabs' },
+      }
+
+      local sections = {
+        lualine_a = {
+          {
+            function()
+              return 'RECORDING'
+            end,
+            cond = noice_recording,
+            color = { fg = colors.bg, bg = colors.red, gui = 'bold' },
+          },
+          {
+            'mode',
+          },
+        },
+        lualine_b = { 'branch', 'diff', 'diagnostics' },
+        lualine_c = { { 'filename', file_status = true, path = 1 } },
+        lualine_x = { 'encoding', 'fileformat', 'filetype' },
+        lualine_y = { 'progress' },
+        lualine_z = {
+          'location',
+          { get_total_lines, description = 'total lines' },
+          {
+            function()
+              return '●'
+            end,
+            cond = noice_recording,
+            color = { fg = colors.bg, bg = colors.red, gui = 'bold' },
+          },
+        },
+      }
+
+      local inactive_sections = {
+        lualine_a = {},
+        lualine_b = {},
+        lualine_c = { { 'filename', file_status = true, path = 1 } },
+        lualine_x = { 'location', { get_total_lines, description = 'total lines' } },
+        lualine_y = {},
+        lualine_z = {},
+      }
+
       require('lualine').setup {
         options = {
           theme = theme,
