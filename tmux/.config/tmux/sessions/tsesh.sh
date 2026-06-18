@@ -20,7 +20,7 @@ case "$1" in
     exec "$BASE" "payjoin" "$HOME/repo/github/payjoin/rust-payjoin"
     ;;
   xsuxpayjoin)
-    exec "$BASE" "xsux-payjoin" "$HOME/repo/github/xstoicunicornx/rust-payjoin"
+    exec "$BASE" "xsuxpayjoin" "$HOME/repo/github/xstoicunicornx/rust-payjoin"
     ;;
   su)
     # xstoicunicornx: any session name + repo
