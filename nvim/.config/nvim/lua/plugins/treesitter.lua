@@ -1,10 +1,9 @@
-return { -- Highlight, edit, and navigate code
+return {           -- Highlight, edit, and navigate code
   'nvim-treesitter/nvim-treesitter',
+  branch = 'main', -- the rewrite; old `master` API is gone on nvim 0.12
   build = ':TSUpdate',
-  main = 'nvim-treesitter.configs', -- Sets main module to use for opts
-  -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
-  opts = {
-    ensure_installed = {
+  config = function()
+    local ensure_installed = {
       'bash',
       'c',
       'diff',
@@ -20,22 +19,35 @@ return { -- Highlight, edit, and navigate code
       'css',
       'javascript',
       'typescript',
-    },
-    -- Autoinstall languages that are not installed
-    auto_install = true,
-    highlight = {
-      enable = true,
-      -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
-      --  If you are experiencing weird indenting issues, add the language to
-      --  the list of additional_vim_regex_highlighting and disabled languages for indent.
-      additional_vim_regex_highlighting = { 'ruby' },
-    },
-    indent = { enable = true, disable = { 'ruby' } },
-  },
-  -- There are additional nvim-treesitter modules that you can use to interact
-  -- with nvim-treesitter. You should go explore a few and see what interests you:
-  --
-  --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
-  --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
-  --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+    }
+
+    -- Install only the parsers that aren't already present.
+    local installed = require('nvim-treesitter.config').get_installed()
+    local to_install = vim.tbl_filter(function(lang)
+      return not vim.tbl_contains(installed, lang)
+    end, ensure_installed)
+    if #to_install > 0 then
+      require('nvim-treesitter').install(to_install)
+    end
+
+    -- Build the set of filetypes our installed parsers handle, so the autocmd
+    -- below only fires for those and never for plugin UI buffers (noice, lazy, ...).
+    local filetypes = {}
+    for _, lang in ipairs(ensure_installed) do
+      for _, ft in ipairs(vim.treesitter.language.get_filetypes(lang)) do
+        filetypes[#filetypes + 1] = ft
+      end
+    end
+
+    -- The new plugin only installs parsers; highlighting/indent are enabled
+    -- per-buffer here (replaces the old highlight.enable / indent.enable opts).
+    vim.api.nvim_create_autocmd('FileType', {
+      group = vim.api.nvim_create_augroup('my.treesitter', { clear = true }),
+      pattern = filetypes,
+      callback = function(args)
+        pcall(vim.treesitter.start, args.buf)
+        vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+      end,
+    })
+  end,
 }
