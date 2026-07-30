@@ -35,6 +35,34 @@ vim.opt.showmode = false
 --  See `:help 'clipboard'`
 vim.schedule(function()
   vim.opt.clipboard = 'unnamedplus'
+
+  -- When nvim runs on the far side of an ssh connection (both machines are
+  -- Macs, so OS can't tell them apart), `pbcopy` would write to the *remote's*
+  -- clipboard. Instead route the `+` register through OSC 52 escape sequences:
+  -- they travel out through tmux (which needs `set-clipboard on`) and ssh up to
+  -- the local terminal, which writes them to the system clipboard -- the same
+  -- path tmux copy-mode uses. On the local machine (no SSH_* vars) we skip this
+  -- and keep pbcopy. Checking presence, not value, so a stale value inside a
+  -- long-lived tmux still counts as "remote".
+  if vim.env.SSH_CONNECTION or vim.env.SSH_TTY or vim.env.SSH_CLIENT then
+    local osc52 = require 'vim.ui.clipboard.osc52'
+    -- OSC 52 paste (reading the clipboard back) is poorly supported over ssh,
+    -- so paste just returns the last yanked text -- copy-first for now.
+    local function paste()
+      return { vim.fn.split(vim.fn.getreg '', '\n'), vim.fn.getregtype '' }
+    end
+    vim.g.clipboard = {
+      name = 'OSC 52',
+      copy = {
+        ['+'] = osc52.copy '+',
+        ['*'] = osc52.copy '*',
+      },
+      paste = {
+        ['+'] = paste,
+        ['*'] = paste,
+      },
+    }
+  end
 end)
 
 -- Enable break indent
